@@ -3,17 +3,12 @@ use std::error::Error;
 use std::fs;
 use std::io;
 
-use csv;
-use sha1;
-
 use itertools::Itertools;
-
 
 use bio::io::fasta;
 use bio::io::gff;
 
-use rust_htslib::bam::record::Cigar;
-use rust_htslib::{bam, bcf};
+use rust_htslib::bcf;
 
 use bio_types::strand::Strand;
 
@@ -37,6 +32,7 @@ pub fn phase<G: io::Read, O: io::Write>(
             "gene" | "ncRNA_gene" | "pseudogene" => {
                 // register new Gene
                 debug!("Gene found");
+                println!("Gene_id {}, ID={}", record.attributes().get("gene_id").unwrap(), record.attributes().get("ID").unwrap());
                 // store last gene
                 if gene.biotype != "" {
                     genes.entry(gene.rec.attributes().get("gene_id").expect("missing gene_id in GFF").to_string())
@@ -55,7 +51,7 @@ pub fn phase<G: io::Read, O: io::Write>(
             "unconfirmed_transcript" | "pseudogenic_transcript" | "mRNA" | "lnc_RNA" | "snRNA" | "rRNA" | "ncRNA" | "miRNA" | "scRNA" | "snoRNA" | "C_gene_segment" |  "J_gene_segment" | "V_gene_segment"=> {
                 // register new transcript
                 debug!("Transcript found");
-                debug!("{}", record.attributes().get("transcript_id").unwrap());
+                println!("ID: {}, Parent: {}", record.attributes().get("ID").unwrap(), record.attributes().get("Parent").unwrap());
                 gene.transcripts
                     .entry(record
                         .attributes()
@@ -75,7 +71,7 @@ pub fn phase<G: io::Read, O: io::Write>(
             "exon" => {
                 debug!("Exon found");
                 // register exon
-                
+                println!("ID: {}, Parent: {}", record.attributes().get("ID").unwrap(), record.attributes().get("Parent").unwrap());
                 let key = str::replace(record.attributes().get("Parent").expect("No parent transcript for exon"), "transcript:", "");
                 gene.transcripts
                     .get_mut(&key)
@@ -95,7 +91,7 @@ pub fn phase<G: io::Read, O: io::Write>(
             "CDS" | "three_prime_UTR" | "five_prime_UTR" => {
                 debug!("exonic region found");
                 // register exon
-                
+                println!("ID: {}, Parent: {}", record.attributes().get("ID").unwrap(), record.attributes().get("Parent").unwrap());
                 let key = str::replace(record.attributes().get("Parent").expect("No parent transcript for exon"), "transcript:", "");
                 gene.transcripts
                     .get_mut(&key)

@@ -5,13 +5,9 @@ extern crate fern;
 #[macro_use]
 extern crate clap;
 extern crate bio;
-extern crate csv;
 extern crate itertools;
 extern crate rust_htslib;
 extern crate vec_map;
-#[macro_use]
-extern crate serde_derive;
-extern crate sha1;
 
 use std::error::Error;
 use std::fs::File;
