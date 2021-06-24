@@ -1,0 +1,8 @@
+name: build
+authors: Jan Forster <j.forster@dkfz.de>, Johannes Köster <johannes.koester@tu-dortmund.de>
+about: Tumor/Normal microphasing for neoantigen prediction.
+
+global_settings:
+  - ColoredHelp
+
+args:

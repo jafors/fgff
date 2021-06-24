@@ -1,0 +1,8 @@
+name: gff-tools
+authors: Jan Forster <forster_jan@web.de>
+about: Filter gff files
+
+global_settings:
+  - ColoredHelp
+
+
