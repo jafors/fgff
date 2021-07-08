@@ -11,7 +11,7 @@ use bio::io::gff;
 
 use std::borrow::ToOwned;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Gene {
     pub rec: gff::Record,
     pub transcripts: BTreeMap<String, Transcript>,
@@ -33,11 +33,11 @@ impl Gene {
 
 
 
-    pub fn start(&self) -> u32 {
+    pub fn start(&self) -> u64 {
         self.interval.start
     }
 
-    pub fn end(&self) -> u32 {
+    pub fn end(&self) -> u64 {
         self.interval.end
     }
 }
@@ -59,10 +59,11 @@ impl From<Strand> for PhasingStrand {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Transcript {
     pub rec: gff::Record,
     pub exons: BTreeMap<String, Exon>,
+    pub cds: BTreeMap<(u64, u64), CDS>,
     pub interval: Interval,
     pub biotype: String,
 }
@@ -72,6 +73,7 @@ impl Transcript {
         Transcript {
             rec: rec.to_owned(),
             exons: BTreeMap::new(),
+            cds: BTreeMap::new(),
             interval: interval,
             biotype: biotype.to_owned(),
         }
@@ -82,7 +84,7 @@ impl Transcript {
 }
 
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Exon {
     pub rec: gff::Record,
     pub interval: Interval,
@@ -97,12 +99,30 @@ impl Exon {
     }
 }
 
+#[derive(Debug, Clone)]
+pub struct CDS {
+    pub rec: gff::Record,
+    pub interval: Interval,
+    pub feature_type: String,
+}
+
+impl CDS {
+    pub fn new(rec: &gff::Record, interval: Interval, feature_type: String) -> Self {
+        CDS {
+            rec: rec.to_owned(),
+            interval,
+            feature_type,
+        }
+    }
+}
+
+
 
 #[derive(Debug)]
 pub struct Interval {
-    pub start: u32,
-    pub end: u32,
-    pub frame: u32,
+    pub start: u64,
+    pub end: u64,
+    pub frame: u64,
 }
 
 impl Ord for Interval {
@@ -134,13 +154,13 @@ impl Clone for Interval {
 impl Copy for Interval {}
 
 impl Interval {
-    pub fn new(start: u32, end: u32, frame: &str) -> Self {
+    pub fn new(start: u64, end: u64, frame: &str) -> Self {
         Interval {
             start: start,
             end: end,
             frame: match frame {
-                "." => 0 as u32,
-                _ => u32::from_str(frame).unwrap(),
+                "." => 0 as u64,
+                _ => u64::from_str(frame).unwrap(),
             }
         }
     }

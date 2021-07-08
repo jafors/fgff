@@ -6,3 +6,18 @@ global_settings:
   - ColoredHelp
 
 args:
+  - verbose:
+      long: verbose
+      short: v
+      help: Verbose output.
+  - recordlist:
+      long: recordlist
+      short: l
+      value_name: FILE
+      help: List of records to remove from or keep in the GFF
+  - operation:
+      long: operation
+      short: op
+      value_name: STRING
+      default_value: "keep"
+      help: What operation to perform on the recordlist. Can be "keep" or "kill"
