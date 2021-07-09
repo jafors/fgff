@@ -10,6 +10,8 @@ rust-htslib = "0.36"
 bio-types = "0.5"
 clap = { version = "2.27", features = ["yaml", "color", "suggestions"]}
 itertools = "0.6"
+csv = "1.1"
+serde = { version = "1", features = ["derive"] }
 log = "0.4"
 vec_map = "0.8"
 fern = "0.5"

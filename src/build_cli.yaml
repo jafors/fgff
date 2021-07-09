@@ -15,6 +15,11 @@ args:
       short: l
       value_name: FILE
       help: List of records to remove from or keep in the GFF
+  - tsv:
+      long: tsv
+      short: t
+      value_name: FILE
+      help: Transcript level expression in tsv format, from kallisto quant.
   - operation:
       long: operation
       short: op

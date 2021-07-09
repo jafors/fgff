@@ -8,6 +8,7 @@ use std::str::FromStr;
 
 use rust_htslib::bcf;
 use bio::io::gff;
+use serde::Deserialize;
 
 use std::borrow::ToOwned;
 
@@ -164,6 +165,15 @@ impl Interval {
             }
         }
     }
+}
+
+#[derive(Debug, Deserialize)]
+pub struct Kallisto {
+    pub transcript_id: String,
+    pub length: u64,
+    pub	eff_length: f64,
+    pub	est_counts: f64,
+    pub	tpm: f64,
 }
 
 

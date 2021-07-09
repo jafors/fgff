@@ -2,7 +2,8 @@
 extern crate log;
 extern crate env_logger;
 extern crate fern;
-//extern crate csv;
+extern crate csv;
+extern crate serde;
 #[macro_use]
 extern crate clap;
 extern crate bio;
@@ -52,15 +53,16 @@ pub fn run_build(matches: &ArgMatches) -> Result<(), Box<dyn Error>> {
     let mut gff_reader = gff::Reader::new(io::stdin(), gff::GffType::GFF3);
     let mut gff_writer = gff::Writer::new(io::stdout(), gff::GffType::GFF3);
     let mut reclist_buffer = std::io::BufReader::new(File::open(matches.value_of("recordlist").unwrap()).unwrap());
-    // let mut tsv_reader = csv::ReaderBuilder::new()
-    //     .delimiter(b'\t')
-    //     .from_path(&matches.value_of("tsv").unwrap())?;
+    let mut tsv_reader = csv::ReaderBuilder::new()
+        .delimiter(b'\t')
+        .from_path(&matches.value_of("tsv").unwrap())?;
     let operation = matches.value_of("operation").unwrap();
     debug!("GTF");
     build::phase(
         &mut gff_reader,
         &mut gff_writer,
         &mut reclist_buffer,
+        &mut tsv_reader,
         operation,
     )
 }
