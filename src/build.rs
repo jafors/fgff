@@ -15,7 +15,6 @@ use bio_types::strand::Strand;
 
 use crate::common::{Gene, Exon, Interval, Transcript, CDS, Kallisto};
 
-//
 
 pub fn kill(kids: Vec<String>, mut genes: BTreeMap<String, Gene>) -> Result<BTreeMap<String, Gene>, Box<dyn Error>> {
     for kid in kids {
@@ -31,7 +30,6 @@ pub fn kill(kids: Vec<String>, mut genes: BTreeMap<String, Gene>) -> Result<BTre
             let mut keep_transcripts = BTreeMap::new();
             for (tid, t) in &mut g.transcripts {
                 if t.exons.contains_key(&kid) {
-                    //debug!("{}", &kid);
                     t.exons.remove(&kid);
                 }
                 if !t.exons.is_empty() {
@@ -45,16 +43,12 @@ pub fn kill(kids: Vec<String>, mut genes: BTreeMap<String, Gene>) -> Result<BTre
 }
 
 pub fn keep(kids: Vec<String>, mut genes: BTreeMap<String, Gene>) -> Result<BTreeMap<String, Gene>, Box<dyn Error>> {
-    // let mut gkeys: Vec<_> = genes.keys().clone().collect_vec();
-    // gkeys.remove(gkeys.iter().position(|x| kids.contains(*x)).expect("ID not found"));
-    // Ok(kill(gkeys, genes));
     let _out: BTreeMap<String, Gene> = BTreeMap::new();
     if kids[0].contains("ENSG") {
         genes.retain(|k, _| kids.contains(k));
         Ok(genes)
     }
     else {
-        //let mut empty_genes = Vec::new();
         for (gid, g) in &mut genes {
             if kids[0].contains("ENST") {
                 g.transcripts.retain(|k, _| kids.contains(k));
@@ -73,11 +67,6 @@ pub fn keep(kids: Vec<String>, mut genes: BTreeMap<String, Gene>) -> Result<BTre
                 }
             }
             g.transcripts = keep_transcripts;
-
-            // let tids: Vec<_> = g.transcripts.keys().clone().collect();
-            // if tids.iter().all(|e| empty_transcripts.contains(e)) {
-            //     empty_genes.push(gid);
-            // }
         }
 
         Ok(genes)
@@ -105,27 +94,7 @@ pub fn filter<F: io::Read + io::Seek,>(
             let t = g.transcripts.get(&row.transcript_id).unwrap();
             let mut new_gene = g.clone();
             new_gene.transcripts.clear();
-            //out_genes.insert(gid.clone(), g.clone());
             out_genes.entry(gid.clone()).or_insert_with(|| new_gene).transcripts.insert(row.transcript_id, t.clone());
-
-            // for (_gid, g) in &mut genes {
-
-            //     if g.transcripts.contains_key(&row.transcript_id) {
-            //         g.transcripts.remove(&row.transcript_id);
-            //         break;
-            //     }
-                // let mut keep_transcripts = BTreeMap::new();
-                // for (tid, t) in &mut g.transcripts {
-                //     if t.exons.contains_key(&row.transcript_id) {
-                //         //debug!("{}", &kid);
-                //         t.exons.remove(&row.transcript_id);
-                //     }
-                //     if !t.exons.is_empty() {
-                //         keep_transcripts.insert(tid.clone(), t.clone());
-                //     }
-                // }
-                // g.transcripts = keep_transcripts;
-            //}
         }
     }
     Ok(out_genes)
@@ -140,7 +109,6 @@ pub fn phase<G: io::Read, O: io::Write, F: io::Read + io::Seek,>(
     operation: &str,
 ) -> Result<(), Box<dyn Error>> {
     let mut genes = BTreeMap::new();
-    //let mut gene: Option<Gene> = None;
     let mut gene = Gene::new(&gff::Record::new(), "", Interval::new(0,0,"."), "");
     let mut parents = BTreeMap::new();
     let reclist = reclist_buffer.lines().map(|l| l.unwrap());
@@ -152,11 +120,8 @@ pub fn phase<G: io::Read, O: io::Write, F: io::Read + io::Seek,>(
             "gene" | "ncRNA_gene" | "pseudogene" => {
                 // register new Gene
                 debug!("Gene found");
-                //debug!("Gene_id {}, ID={}", record.attributes().get("gene_id").unwrap(), record.attributes().get("ID").unwrap());
-                // if gene.biotype != "" {
-                //     genes.entry(gene.rec.attributes().get("gene_id").expect("missing gene_id in GFF").to_string())
-                //         .or_insert(gene);
-                // }
+                debug!("Gene_id {}, ID={}", record.attributes().get("gene_id").unwrap(), record.attributes().get("ID").unwrap());
+
                 let genetype = match record.attributes().contains_key("biotype") {
                     true => "biotype",
                     false => "gene_type"
@@ -170,7 +135,6 @@ pub fn phase<G: io::Read, O: io::Write, F: io::Read + io::Seek,>(
                         .get(genetype)
                         .expect("missing gene_biotype in GTF"),
                 );
-                // store last gene
                 
 
                 genes.entry(gene.rec.attributes().get("gene_id").expect("missing gene_id in GFF").to_string())
@@ -178,7 +142,7 @@ pub fn phase<G: io::Read, O: io::Write, F: io::Read + io::Seek,>(
 
 
             }
-            "unconfirmed_transcript" | "pseudogenic_transcript" | "mRNA" | "lnc_RNA" | "snRNA" | "rRNA" | "ncRNA" | "miRNA" | "scRNA" | "snoRNA" | "D_gene_segment" | "C_gene_segment" |  "J_gene_segment" | "V_gene_segment"=> {
+            "unconfirmed_transcript" | "pseudogenic_transcript" | "mRNA" | "lnc_RNA" | "snRNA" | "rRNA" | "ncRNA" | "miRNA" | "scRNA" | "snoRNA" | "tRNA" | "D_gene_segment" | "C_gene_segment" |  "J_gene_segment" | "V_gene_segment"=> {
                 // register new transcript
                 debug!("Transcript found");
                 let transcript_type = match record.attributes().contains_key("biotype") {
@@ -235,7 +199,7 @@ pub fn phase<G: io::Read, O: io::Write, F: io::Read + io::Seek,>(
             }
             "CDS" => {
                 debug!("exonic region found");
-                // register exon
+                // register CDS
                 //debug!("ID: {}, Parent: {}", record.attributes().get("ID").unwrap(), record.attributes().get("Parent").unwrap());
                 let key = str::replace(record.attributes().get("Parent").expect("No parent transcript for exon"), "transcript:", "");
                 let gene_id = parents.get(&key).expect(&format!("no transcript with this ID {}", key));
@@ -255,7 +219,7 @@ pub fn phase<G: io::Read, O: io::Write, F: io::Read + io::Seek,>(
             }
             "three_prime_UTR" | "five_prime_UTR" => {
                 debug!("UTR region found");
-                // register exon
+                // register UTR
                 //debug!("ID: {}, Parent: {}", record.attributes().get("ID").unwrap(), record.attributes().get("Parent").unwrap());
                 let key = str::replace(record.attributes().get("Parent").expect("No parent transcript for exon"), "transcript:", "");
                 let gene_id = parents.get(&key).expect(&format!("no transcript with this ID {}", key));
@@ -276,30 +240,15 @@ pub fn phase<G: io::Read, O: io::Write, F: io::Read + io::Seek,>(
             _ => continue,
         }
     }
-    // genes.entry(gene.rec.attributes().get("gene_id").expect("missing gene_id in GFF").to_string())
-    // .or_insert(gene);
 
-    // let mut tcount = 0;
     let threshold = 10.0;
-//    let mut keeplist = Vec::new();
-    // for record in tsv_reader.records() {
-    //     let record = record?;
-    //     let row: Kallisto = record.deserialize(None)?;
-    //     if row.tpm < threshold {
-    //         //debug!("Kill {}", row.transcript_id);
-    //     }
-    //     else {
-    //         //debug!("Keep {}", row.transcript_id);
-    //         keeplist.push(row.transcript_id);
-    //     }
-    // }
     // let mut out_genes = match operation {
     //     "kill" => kill(reclist.collect_vec(), genes).unwrap(),
     //     "keep" => keep(reclist.collect_vec(), genes).unwrap(),
     //     _ => genes
     // };
 
-    let mut out_genes = genes;//filter(tsv_reader, threshold, genes, parents).unwrap();
+    let mut out_genes = filter(tsv_reader, threshold, genes, parents).unwrap();
 
     let mut out_vec = Vec::from_iter(out_genes);
 
@@ -336,9 +285,5 @@ pub fn phase<G: io::Read, O: io::Write, F: io::Read + io::Seek,>(
             }
         }
     }
-    //debug!("Len of all transcripts: {}", tcount);
-
     Ok(())
 }
-
-
