@@ -26,3 +26,25 @@ args:
       value_name: STRING
       default_value: "keep"
       help: What operation to perform on the recordlist. Can be "keep" or "kill"
+  - strict:
+      long: strict
+      help: "Activate for only protein_coding genes and transcripts (excluding nonsense mediated decay and nonstop decay)"
+  - ig:
+      long: immunoglobulins
+      help: "Filter for immunoglobulin (IG_ and TR_) entries"
+  - ncRNA:
+      long: ncRNA
+      help: Filter for non-coding RNA genes and transcripts (lncRNA, miRNA, etc.)
+  - protein_coding:
+      long: protein-coding
+      help: Filter for protein-coding genes and transcripts (including nonsense mediated decay and nonstop decay)
+  - transcript_support_level:
+      long: transcript-support
+      short: s
+      default_value: "NA"
+      value_name: STRING
+      help: Minimal transcript support level (TSL). Ranges from 1 (best) to 5 (worst) and "NA" (including non-assessed TSL).
+  - tpm_threshold:
+      long: tpm
+      default_value: "10.0"
+      help: Minimal TPM value for a transcript to be considered. Default = 10.0.

@@ -57,6 +57,80 @@ pub fn run_build(matches: &ArgMatches) -> Result<(), Box<dyn Error>> {
         .delimiter(b'\t')
         .from_path(&matches.value_of("tsv").unwrap())?;
     let operation = matches.value_of("operation").unwrap();
+    let mut biotypes: Vec<&str> = Vec::new();
+    let tsl = matches.value_of("transcript_support_level").unwrap();
+    let tpm = matches.value_of("tpm_threshold").unwrap().parse::<f64>().unwrap();
+
+    if matches.is_present("ig") {
+        biotypes.append(&mut vec!["IG_C_gene",
+            "IG_D_gene",
+            "IG_J_gene",
+            "IG_LV_gene",
+            "IG_V_gene",
+            "TR_C_gene",
+            "TR_J_gene",
+            "TR_V_gene",
+            "TR_D_gene",
+            "IG_C_pseudogene",
+            "IG_pseudogene",
+            "IG_J_pseudogene",
+            "IG_V_pseudogene",
+            "TR_J_pseudogene",
+            "TR_V_pseudogene",
+            ]
+        )
+    }
+    if matches.is_present("ncRNA") {
+        biotypes.append(&mut vec!["Mt_rRNA",
+            "Mt_tRNA",
+            "miRNA",
+            "misc_RNA",
+            "rRNA",
+            "scRNA",
+            "snRNA",
+            "snoRNA",
+            "ribozyme",
+            "sRNA",
+            "scaRNA",
+            "Mt_tRNA_pseudogene",
+            "tRNA_pseudogene",
+            "snoRNA_pseudogene",
+            "snRNA_pseudogene",
+            "scRNA_pseudogene",
+            "rRNA_pseudogene",
+            "misc_RNA_pseudogene",
+            "miRNA_pseudogene",
+            "lncRNA"
+            ]
+        )
+    }
+    if matches.is_present("pseudogenes") {
+        biotypes.append(&mut vec!["pseudogene",
+        "processed_transcript",
+        "processed_pseudogene",
+        "unitary_pseudogene",
+        "unprocessed_pseudogene",
+        "polymorphic_pseudogene",
+        "transcribed_processed_pseudogene",
+        "transcribed_unitary_pseudogene",
+        "transcribed_unprocessed_pseudogene",
+        "translated_processed_pseudogene",
+        "translated_unprocessed_pseudogene",
+            ]
+        )
+    }
+    if matches.is_present("protein_coding") {
+        biotypes.append(&mut vec!["protein_coding",
+        "nonsense_mediated_decay",
+        "non_stop_decay",
+        "processed_transcript",
+        "retained_intron"])
+    }
+    if matches.is_present("strict") {
+        //println!("Strict Mode");
+        biotypes = vec!["protein_coding"];
+    }
+
     debug!("GTF");
     build::phase(
         &mut gff_reader,
@@ -64,6 +138,9 @@ pub fn run_build(matches: &ArgMatches) -> Result<(), Box<dyn Error>> {
         &mut reclist_buffer,
         &mut tsv_reader,
         operation,
+        biotypes,
+        tsl,
+        tpm,
     )
 }
 

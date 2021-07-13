@@ -128,7 +128,7 @@ pub struct Interval {
 
 impl Ord for Interval {
     fn cmp(&self, other: &Interval) -> Ordering {
-        self.start.cmp(&other.start)
+        self.start.cmp(&other.start).then(self.end.cmp(&other.end))
     }
 }
 
