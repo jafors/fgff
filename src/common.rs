@@ -1,12 +1,10 @@
 use std::cmp::Ordering;
-use std::collections::{BTreeMap, VecDeque};
+use std::collections::{BTreeMap};
 use bio_types::strand::Strand;
 
-use std::error::Error;
 use std::str;
 use std::str::FromStr;
 
-use rust_htslib::bcf;
 use bio::io::gff;
 use serde::Deserialize;
 
@@ -31,8 +29,6 @@ impl Gene {
             biotype: biotype.to_owned(),
         }
     }
-
-
 
     pub fn start(&self) -> u64 {
         self.interval.start

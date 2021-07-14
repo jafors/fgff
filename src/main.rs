@@ -12,13 +12,12 @@ extern crate rust_htslib;
 extern crate vec_map;
 
 use std::error::Error;
-use std::fs::File;
-use std::io::{self, BufReader};
+use std::io;
 use std::process;
 
 use clap::{App, ArgMatches, SubCommand};
 
-use bio::io::{fasta, gff};
+use bio::io::{gff};
 
 
 pub mod common;
@@ -52,11 +51,10 @@ pub fn run_build(matches: &ArgMatches) -> Result<(), Box<dyn Error>> {
         .unwrap();
     let mut gff_reader = gff::Reader::new(io::stdin(), gff::GffType::GFF3);
     let mut gff_writer = gff::Writer::new(io::stdout(), gff::GffType::GFF3);
-    let mut reclist_buffer = std::io::BufReader::new(File::open(matches.value_of("recordlist").unwrap()).unwrap());
+    //let mut reclist_buffer = std::io::BufReader::new(File::open(matches.value_of("recordlist").unwrap()).unwrap());
     let mut tsv_reader = csv::ReaderBuilder::new()
         .delimiter(b'\t')
         .from_path(&matches.value_of("tsv").unwrap())?;
-    let operation = matches.value_of("operation").unwrap();
     let mut biotypes: Vec<&str> = Vec::new();
     let tsl = matches.value_of("transcript_support_level").unwrap();
     let tpm = matches.value_of("tpm_threshold").unwrap().parse::<f64>().unwrap();
@@ -135,9 +133,7 @@ pub fn run_build(matches: &ArgMatches) -> Result<(), Box<dyn Error>> {
     build::phase(
         &mut gff_reader,
         &mut gff_writer,
-        &mut reclist_buffer,
         &mut tsv_reader,
-        operation,
         biotypes,
         tsl,
         tpm,

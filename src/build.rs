@@ -1,84 +1,76 @@
-use std::collections::{BTreeMap, VecDeque};
+use std::collections::{BTreeMap};
 use std::error::Error;
-use std::fs;
-use std::io::{self, BufRead, BufReader};
+use std::io::{self};
 use std::iter::FromIterator;
 
-use itertools::Itertools;
-
-use bio::io::fasta;
 use bio::io::gff;
-
-use rust_htslib::bcf;
-
-use bio_types::strand::Strand;
 
 use crate::common::{Gene, Exon, Interval, Transcript, CDS, Kallisto};
 
 
-pub fn kill(kids: Vec<String>, mut genes: BTreeMap<String, Gene>) -> Result<BTreeMap<String, Gene>, Box<dyn Error>> {
-    for kid in kids {
-        if genes.contains_key(&kid) {
-            genes.remove(&kid);
-        }
-        for (_gid, g) in &mut genes {
+// pub fn kill(kids: Vec<String>, mut genes: BTreeMap<String, Gene>) -> Result<BTreeMap<String, Gene>, Box<dyn Error>> {
+//     for kid in kids {
+//         if genes.contains_key(&kid) {
+//             genes.remove(&kid);
+//         }
+//         for (_gid, g) in &mut genes {
 
-            if g.transcripts.contains_key(&kid) {
-                g.transcripts.remove(&kid);
-                break;
-            }
-            let mut keep_transcripts = BTreeMap::new();
-            for (tid, t) in &mut g.transcripts {
-                if t.exons.contains_key(&kid) {
-                    t.exons.remove(&kid);
-                }
-                if !t.exons.is_empty() {
-                    keep_transcripts.insert(tid.clone(), t.clone());
-                }
-            }
-            g.transcripts = keep_transcripts;
-        }
-    }
-    Ok(genes)
-}
+//             if g.transcripts.contains_key(&kid) {
+//                 g.transcripts.remove(&kid);
+//                 break;
+//             }
+//             let mut keep_transcripts = BTreeMap::new();
+//             for (tid, t) in &mut g.transcripts {
+//                 if t.exons.contains_key(&kid) {
+//                     t.exons.remove(&kid);
+//                 }
+//                 if !t.exons.is_empty() {
+//                     keep_transcripts.insert(tid.clone(), t.clone());
+//                 }
+//             }
+//             g.transcripts = keep_transcripts;
+//         }
+//     }
+//     Ok(genes)
+// }
 
-pub fn keep(kids: Vec<String>, mut genes: BTreeMap<String, Gene>) -> Result<BTreeMap<String, Gene>, Box<dyn Error>> {
-    let _out: BTreeMap<String, Gene> = BTreeMap::new();
-    if kids[0].contains("ENSG") {
-        genes.retain(|k, _| kids.contains(k));
-        Ok(genes)
-    }
-    else {
-        for (gid, g) in &mut genes {
-            if kids[0].contains("ENST") {
-                g.transcripts.retain(|k, _| kids.contains(k));
-            }
-            let mut empty_transcripts = Vec::new();
-            let mut keep_transcripts = BTreeMap::new();
-            for (tid, t) in &mut g.transcripts {
-                if kids[0].contains("ENSE") {
-                    t.exons.retain(|k, _| kids.contains(k));
-                }
-                if t.exons.is_empty() {
-                    empty_transcripts.push(tid);
-                }
-                else {
-                    keep_transcripts.insert(tid.clone(), t.clone());
-                }
-            }
-            g.transcripts = keep_transcripts;
-        }
+// pub fn keep(kids: Vec<String>, mut genes: BTreeMap<String, Gene>) -> Result<BTreeMap<String, Gene>, Box<dyn Error>> {
+//     let _out: BTreeMap<String, Gene> = BTreeMap::new();
+//     if kids[0].contains("ENSG") {
+//         genes.retain(|k, _| kids.contains(k));
+//         Ok(genes)
+//     }
+//     else {
+//         for (gid, g) in &mut genes {
+//             if kids[0].contains("ENST") {
+//                 g.transcripts.retain(|k, _| kids.contains(k));
+//             }
+//             let mut empty_transcripts = Vec::new();
+//             let mut keep_transcripts = BTreeMap::new();
+//             for (tid, t) in &mut g.transcripts {
+//                 if kids[0].contains("ENSE") {
+//                     t.exons.retain(|k, _| kids.contains(k));
+//                 }
+//                 if t.exons.is_empty() {
+//                     empty_transcripts.push(tid);
+//                 }
+//                 else {
+//                     keep_transcripts.insert(tid.clone(), t.clone());
+//                 }
+//             }
+//             g.transcripts = keep_transcripts;
+//         }
 
-        Ok(genes)
-    }
-}
+//         Ok(genes)
+//     }
+// }
 
 
 pub fn filter<F: io::Read + io::Seek,>(
     tsv_reader: &mut csv::Reader<F>,
     threshold: f64,
     mut genes: BTreeMap<String, Gene>,
-    mut parents: BTreeMap<String, String>,
+    parents: BTreeMap<String, String>,
 ) -> Result<BTreeMap<String, Gene>, Box<dyn Error>> {
     let mut out_genes = BTreeMap::new();
     for record in tsv_reader.records() {
@@ -115,19 +107,16 @@ pub fn parse_tsl (tsl: &str) -> u32 {
 pub fn phase<G: io::Read, O: io::Write, F: io::Read + io::Seek,>(
     gtf_reader: &mut gff::Reader<G>,
     gff_writer: &mut gff::Writer<O>,
-    reclist_buffer: &mut BufReader<F>,
     tsv_reader: &mut csv::Reader<F>,
-    operation: &str,
     biotypes: Vec<&str>,
     tsl: &str,
     tpm: f64,
 ) -> Result<(), Box<dyn Error>> {
     let mut genes = BTreeMap::new();
-    let mut gene = Gene::new(&gff::Record::new(), "", Interval::new(0,0,"."), "");
     let mut parents = BTreeMap::new();
     // get tsl threshold - 1-5 or NA (represented as 6)
     let tsl_threshold = parse_tsl(tsl);
-    let reclist = reclist_buffer.lines().map(|l| l.unwrap());
+    //let reclist = reclist_buffer.lines().map(|l| l.unwrap());
     for record in gtf_reader.records() {
         debug!("New Record!");
         let record = record?;
@@ -145,7 +134,7 @@ pub fn phase<G: io::Read, O: io::Write, F: io::Read + io::Seek,>(
                 if !biotypes.is_empty() && !biotypes.contains(&record.attributes().get(genetype).unwrap().as_str()) {
                     continue;
                 }
-                gene = Gene::new(
+                let gene = Gene::new(
                     &record,
                     record.seqname(),
                     Interval::new(*record.start() as u64 - 1, *record.end() as u64, record.frame()),

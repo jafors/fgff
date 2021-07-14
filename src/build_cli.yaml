@@ -10,22 +10,11 @@ args:
       long: verbose
       short: v
       help: Verbose output.
-  - recordlist:
-      long: recordlist
-      short: l
-      value_name: FILE
-      help: List of records to remove from or keep in the GFF
   - tsv:
-      long: tsv
-      short: t
+      long: expression
+      short: e
       value_name: FILE
       help: Transcript level expression in tsv format, from kallisto quant.
-  - operation:
-      long: operation
-      short: op
-      value_name: STRING
-      default_value: "keep"
-      help: What operation to perform on the recordlist. Can be "keep" or "kill"
   - strict:
       long: strict
       help: "Activate for only protein_coding genes and transcripts (excluding nonsense mediated decay and nonstop decay)"
