@@ -26,16 +26,41 @@ pub mod build;
 
 pub fn run() -> Result<(), Box<dyn Error>> {
     let yaml = load_yaml!("cli.yaml");
-    let build_yaml = load_yaml!("build_cli.yaml");
+    let filter_yaml = load_yaml!("filter_cli.yaml");
+    let tss_yaml = load_yaml!("tss_cli.yaml");
     let matches = App::from_yaml(yaml)
                     .version(env!("CARGO_PKG_VERSION"))
-                    .subcommand(SubCommand::from_yaml(build_yaml))
+                    .subcommand(SubCommand::from_yaml(filter_yaml))
+                    .subcommand(SubCommand::from_yaml(tss_yaml))
                     .get_matches();
 
     match matches.subcommand() {
         ("build", Some(m)) => run_build(m),
+        ("tss", Some(m)) => run_tss(m),
         _ => Ok(())
     }
+}
+
+pub fn run_tss(matches: &ArgMatches) -> Result<(), Box<dyn Error>> {
+    fern::Dispatch::new()
+    .format(|out, message, _| out.finish(format_args!("{}", message)))
+    .level(if matches.is_present("verbose") {
+        log::LevelFilter::Debug
+    } else {
+        log::LevelFilter::Info
+    })
+    .chain(std::io::stderr())
+    .apply()
+    .unwrap();
+    let mut gff_reader = match matches.is_present("gtf") {
+        true => gff::Reader::new(io::stdin(), gff::GffType::GTF2),
+        false => gff::Reader::new(io::stdin(), gff::GffType::GFF3),
+    };
+    let mut tsv_writer = csv::WriterBuilder::new()
+    .delimiter(b'\t')
+    .from_writer(io::stdout());
+    debug!("TSS");
+    build::tss(&mut gff_reader, &mut tsv_writer)
 }
 
 pub fn run_build(matches: &ArgMatches) -> Result<(), Box<dyn Error>> {

@@ -3,9 +3,11 @@ use std::error::Error;
 use std::io::{self};
 use std::iter::FromIterator;
 
+
+use bio_types::strand::Strand;
 use bio::io::gff;
 
-use crate::common::{Gene, Exon, Interval, Transcript, CDS, Kallisto};
+use crate::common::{Gene, Exon, Interval, Transcript, CDS, Kallisto, TSS};
 
 
 // pub fn kill(kids: Vec<String>, mut genes: BTreeMap<String, Gene>) -> Result<BTreeMap<String, Gene>, Box<dyn Error>> {
@@ -103,6 +105,52 @@ pub fn parse_tsl (tsl: &str) -> u32 {
     }
     tsl_threshold
 }
+
+
+
+pub fn tss<G: io::Read, O: io::Write,>(
+    gff_reader: &mut gff::Reader<G>,
+    tsv_writer: &mut csv::Writer<O>,
+) -> Result<(), Box<dyn Error>> {
+    for record in gff_reader.records() {
+        debug!("New Record!");
+        let record = record?;
+        //debug!("Record: {:?}", record);
+        match record.feature_type() {
+            "transcript" | "mRNA" | "unconfirmed_transcript" | "pseudogenic_transcript" | "lnc_RNA" | "snRNA" | "rRNA" | "ncRNA" | "miRNA" | "scRNA" | "snoRNA" => {
+                let chrom = record.seqname();
+                let strand = match record.strand().unwrap() {
+                    Strand::Forward => "+",
+                    Strand::Reverse => "-",
+                    _ => ".",
+                };
+                let tss_start = match record.strand().unwrap() {
+                    Strand::Reverse => record.end(),
+                    _ => record.start(),
+                };
+                let tss_end = match record.strand().unwrap() {
+                    Strand::Reverse => record.end() - 1,
+                    _ => record.start() + 1,
+                };
+                let name = match record.attributes().contains_key("gene_name") {
+                    true => "gene_name",
+                    false => "Name"
+                };
+                let gene_name = record.attributes()
+                    .get(name)
+                    .expect("Missing gene name!");
+                let mut splitted = gene_name.split('-');
+                let gene_name = splitted.next().unwrap();
+                let tss = TSS::new(chrom, tss_start, tss_end, strand, gene_name);
+                tsv_writer.serialize(tss)?
+            }
+            _ => continue,
+        }
+    }
+    Ok(())
+}
+
+
 
 pub fn phase<G: io::Read, O: io::Write, F: io::Read + io::Seek,>(
     gtf_reader: &mut gff::Reader<G>,

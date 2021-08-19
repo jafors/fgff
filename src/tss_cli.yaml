@@ -1,0 +1,15 @@
+name: tss
+authors: Jan Forster <j.forster@dkfz.de>
+about: Get TSS (transcription start site) file from GTF/GFF
+
+global_settings:
+  - ColoredHelp
+
+args:
+  - verbose:
+      long: verbose
+      short: v
+      help: Verbose output.
+  - gtf:
+      long: gtf
+      help: is GTF input.

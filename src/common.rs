@@ -7,6 +7,7 @@ use std::str::FromStr;
 
 use bio::io::gff;
 use serde::Deserialize;
+use serde::Serialize;
 
 use std::borrow::ToOwned;
 
@@ -170,6 +171,27 @@ pub struct Kallisto {
     pub	eff_length: f64,
     pub	est_counts: f64,
     pub	tpm: f64,
+}
+
+#[derive(Debug, Serialize)]
+pub struct TSS {
+    chrom: String,
+    tss_start: u64,
+    tss_end: u64,
+    strand: String,
+    gene_name: String,
+}
+
+impl TSS {
+    pub fn new(chrom: &str, tss_start: &u64, tss_end: u64, strand: &str, gene_name: &str) -> Self {
+        TSS {
+            chrom: chrom.to_owned(),
+            tss_start: tss_start.to_owned(),
+            tss_end: tss_end,
+            strand: strand.to_owned(),
+            gene_name: gene_name.to_owned(),
+        }
+    }
 }
 
 
