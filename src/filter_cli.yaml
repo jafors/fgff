@@ -1,6 +1,7 @@
 name: filter
 authors: Jan Forster <j.forster@dkfz.de>
 about: Filter GFF file by transcript expression and other features
+usage: gff-tools filter --expression kallisto.quant --strict --transcript-level 3 --tpm 10.0  < in.gff3 > out.gff3
 
 global_settings:
   - ColoredHelp
