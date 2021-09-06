@@ -155,7 +155,7 @@ pub fn run_build(matches: &ArgMatches) -> Result<(), Box<dyn Error>> {
     }
 
     debug!("GTF");
-    build::phase(
+    build::parse(
         &mut gff_reader,
         &mut gff_writer,
         &mut tsv_reader,

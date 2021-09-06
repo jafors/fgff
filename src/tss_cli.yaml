@@ -1,7 +1,7 @@
 name: tss
 authors: Jan Forster <j.forster@dkfz.de>
 about: Get TSS (transcription start site) file from GTF/GFF
-usage: gff-tools filter < in.gff3 > out.tss.tsv
+usage: fgff tss < in.gff3 > out.tss.tsv
 
 global_settings:
   - ColoredHelp

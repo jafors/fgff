@@ -152,7 +152,7 @@ pub fn tss<G: io::Read, O: io::Write,>(
 
 
 
-pub fn phase<G: io::Read, O: io::Write, F: io::Read + io::Seek,>(
+pub fn parse<G: io::Read, O: io::Write, F: io::Read + io::Seek,>(
     gtf_reader: &mut gff::Reader<G>,
     gff_writer: &mut gff::Writer<O>,
     tsv_reader: &mut csv::Reader<F>,
